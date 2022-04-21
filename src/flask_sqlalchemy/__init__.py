@@ -363,11 +363,11 @@ class Pagination:
     @property
     def pages(self):
         """The total number of pages"""
-        if self.per_page == 0 or self.total is None:
-            pages = 0
-        else:
-            pages = int(ceil(self.total / float(self.per_page)))
-        return pages
+        return (
+            0
+            if self.per_page == 0 or self.total is None
+            else int(ceil(self.total / float(self.per_page)))
+        )
 
     def prev(self, error_out=False):
         """Returns a :class:`Pagination` object for the previous page."""
@@ -379,9 +379,7 @@ class Pagination:
     @property
     def prev_num(self):
         """Number of the previous page."""
-        if not self.has_prev:
-            return None
-        return self.page - 1
+        return self.page - 1 if self.has_prev else None
 
     @property
     def has_prev(self):
@@ -403,9 +401,7 @@ class Pagination:
     @property
     def next_num(self):
         """Number of the next page"""
-        if not self.has_next:
-            return None
-        return self.page + 1
+        return self.page + 1 if self.has_next else None
 
     def iter_pages(self, left_edge=2, left_current=2, right_current=5, right_edge=2):
         """Iterates over the page numbers in the pagination.  The four
@@ -544,11 +540,7 @@ class BaseQuery(orm.Query):
         if not items and page != 1 and error_out:
             abort(404)
 
-        if not count:
-            total = None
-        else:
-            total = self.order_by(None).count()
-
+        total = self.order_by(None).count() if count else None
         return Pagination(self, page, per_page, total, items)
 
 
@@ -558,8 +550,7 @@ class _QueryProperty:
 
     def __get__(self, obj, type):
         try:
-            mapper = orm.class_mapper(type)
-            if mapper:
+            if mapper := orm.class_mapper(type):
                 return type.query_class(mapper, session=self.sa.session())
         except UnmappedClassError:
             return None
@@ -1006,11 +997,11 @@ class SQLAlchemy:
 
     def get_tables_for_bind(self, bind=None):
         """Returns a list of all tables relevant for a bind."""
-        result = []
-        for table in self.Model.metadata.tables.values():
-            if table.info.get("bind_key") == bind:
-                result.append(table)
-        return result
+        return [
+            table
+            for table in self.Model.metadata.tables.values()
+            if table.info.get("bind_key") == bind
+        ]
 
     def get_binds(self, app=None):
         """Returns a dictionary with a table->engine mapping.
@@ -1023,7 +1014,7 @@ class SQLAlchemy:
         for bind in binds:
             engine = self.get_engine(app, bind)
             tables = self.get_tables_for_bind(bind)
-            retval.update({table: engine for table in tables})
+            retval |= {table: engine for table in tables}
         return retval
 
     def _execute_for_all_tables(self, app, bind, operation, skip_tables=False):

@@ -63,7 +63,7 @@ class NameMetaMixin(type):
         ):
             del cls.__table__
 
-    def __table_cls__(cls, *args, **kwargs):
+    def __table_cls__(self, *args, **kwargs):
         """This is called by SQLAlchemy during mapper setup. It determines the
         final table object that the model will use.
 
@@ -74,7 +74,7 @@ class NameMetaMixin(type):
         # allows reflected tables to be applied to model by name
         key = _get_table_key(args[0], kwargs.get("schema"))
 
-        if key in cls.metadata.tables:
+        if key in self.metadata.tables:
             return sa.Table(*args, **kwargs)
 
         # if a primary key or constraint is found, create a table for
@@ -87,15 +87,15 @@ class NameMetaMixin(type):
 
         # if no base classes define a table, return one
         # ensures the correct error shows up when missing a primary key
-        for base in cls.__mro__[1:-1]:
+        for base in self.__mro__[1:-1]:
             if "__table__" in base.__dict__:
                 break
         else:
             return sa.Table(*args, **kwargs)
 
         # single-table inheritance, use the parent tablename
-        if "__tablename__" in cls.__dict__:
-            del cls.__tablename__
+        if "__tablename__" in self.__dict__:
+            del self.__tablename__
 
 
 class BindMetaMixin(type):

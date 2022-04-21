@@ -106,8 +106,8 @@ def test_mixin_attr(db):
 
     class Mixin:
         @declared_attr
-        def __tablename__(cls):  # noqa: B902
-            return cls.__name__.upper()
+        def __tablename__(self):  # noqa: B902
+            return self.__name__.upper()
 
     class Bird(Mixin, db.Model):
         id = db.Column(db.Integer, primary_key=True)
@@ -149,7 +149,7 @@ def test_complex_inheritance(db):
 
     class IdMixin:
         @declared_attr
-        def id(cls):  # noqa: B902
+        def id(self):  # noqa: B902
             return db.Column(db.Integer, db.ForeignKey(Duck.id), primary_key=True)
 
     class RubberDuck(IdMixin, Duck):
